@@ -1,4 +1,4 @@
-module Famoustitle
+module FamoustitleRails
   module Generators
     class InstallGenerator < Rails::Generators::Base
       source_root File.expand_path('templates', __dir__)
@@ -23,7 +23,7 @@ module Famoustitle
         end
       end
   
-      def invoke_bundle_install
+      def install_gems
         Bundler.with_original_env do
           run "bundle install"
         end
@@ -46,7 +46,7 @@ module Famoustitle
         end
       end
   
-      def copy_routes
+      def copy_starting_point_routes
         template "config/routes.rb", "config/routes.rb", force: true
       end
   
