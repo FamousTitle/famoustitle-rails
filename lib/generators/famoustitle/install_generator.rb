@@ -1,0 +1,70 @@
+module Famoustitle
+  module Generators
+    class InstallGenerator < Rails::Generators::Base
+      source_root File.expand_path('templates', __dir__)
+    
+
+      def add_gems
+        gem 'goldiloader', '~> 4.1.0'
+        gem 'graphql', '~> 1.12.12'
+        gem 'rack-cors', '~> 1.1.1'
+        gem 'lockbox', '~> 0.6.5'
+        gem 'blind_index', '~> 2.2.0'
+        gem 'fameauth', git: 'https://github.com/vleango/fameauth.git', tag: "1.0.0"
+      end
+  
+      def create_cors_config_file
+        template "config/initializers/cors.rb", "config/initializers/cors.rb"
+      end
+  
+      def update_application_for_dns_fix
+        application(nil, env: "development") do
+          "Rails.application.config.hosts = nil"
+        end
+      end
+  
+      def invoke_bundle_install
+        Bundler.with_original_env do
+          run "bundle install"
+        end
+      end
+  
+      def setup_devise
+        template "models/user.rb", "models/user.rb"
+      end
+  
+      def setup_graphql
+        run "rails generate graphql:install"
+        gsub_file 'Gemfile', "gem 'graphiql-rails', group: :development", ''
+  
+        file = 'app/controllers/graphql_controller.rb'
+        gsub_file file, "# protect_from_forgery with: :null_session", 'protect_from_forgery with: :null_session'
+        gsub_file file, "# current_user: current_user,", 'current_user: current_user,'
+        
+        inject_into_file file, before: "def execute" do
+          "include ActiveStorage::SetCurrent\n\n"
+        end
+      end
+  
+      def copy_routes
+        template "config/routes.rb", "config/routes.rb", force: true
+      end
+  
+      def setup_database
+        file = 'config/database.yml'
+        gsub_file file, "password:", 'password: rails'
+        gsub_file file, "host: localhost", 'host: <%= ENV.fetch("RAILS_API_HOST") { "db-mysql" } %>'
+  
+        inject_into_file file, after: 'host: <%= ENV.fetch("RAILS_API_HOST") { "db-mysql" } %>' do
+          "\n  port: <%= ENV.fetch(\"RAILS_API_DB_PORT\") { \"db-mysql\" } %>"
+        end
+      end
+  
+      def get_migrations
+        run "rails railties:install:migrations"
+      end
+      
+    end
+  end
+end
+
