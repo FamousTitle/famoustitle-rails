@@ -1,9 +1,12 @@
+require 'byebug'
+
 module FamoustitleRails
   module Generators
     class InstallGenerator < Rails::Generators::Base
       source_root File.expand_path('templates', __dir__)
     
       def remove_setup_gem
+        byebug
         gsub_file 'Gemfile', /gem 'famoustitle_rails'.\n/, ""
       end
 
