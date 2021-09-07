@@ -11,7 +11,8 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = "https://github.com/vleango/famoustitle_rails"
   #spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
 
+  spec.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
+
   spec.add_development_dependency 'byebug',
 
-  spec.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
 end
