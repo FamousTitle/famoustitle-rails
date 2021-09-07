@@ -13,6 +13,6 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
 
-  spec.add_development_dependency 'byebug',
+  spec.add_development_dependency 'byebug'
 
 end
