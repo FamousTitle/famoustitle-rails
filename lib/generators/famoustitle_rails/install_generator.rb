@@ -3,6 +3,9 @@ module FamoustitleRails
     class InstallGenerator < Rails::Generators::Base
       source_root File.expand_path('templates', __dir__)
     
+      def remove_setup_gem
+        gsub_file 'Gemfile', /gem 'famoustitle_rails'.\n/, ""
+      end
 
       def add_gems
         gem 'goldiloader', '~> 4.1.0'
