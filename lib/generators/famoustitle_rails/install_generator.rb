@@ -13,7 +13,7 @@ module FamoustitleRails
         gem 'rack-cors', '~> 1.1.1'
         gem 'lockbox', '~> 0.6.5'
         gem 'blind_index', '~> 2.2.0'
-        gem 'fameauth', git: 'https://github.com/vleango/fameauth.git', tag: "1.0.0"
+        gem 'fameauth', git: 'https://github.com/vleango/fameauth.git', ref: "008700c" #tag: "1.0.0"
       end
   
       def create_cors_config_file
