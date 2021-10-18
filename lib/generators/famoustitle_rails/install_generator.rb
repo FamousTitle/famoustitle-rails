@@ -53,7 +53,7 @@ module FamoustitleRails
         file = Dir["#{Rails.root}/app/graphql/*_schema.rb"].first
 
         inject_into_file file, after: '< GraphQL::Schema' do
-          "\n  disable_schema_introspection_entry_point unless Rails.env.development?\n  disable_type_introspection_entry_point unless Rails.env.development?\n\n"
+          "\n  disable_schema_introspection_entry_point unless Rails.env.development?\n  disable_type_introspection_entry_point unless Rails.env.development?\n"
         end
       end
   
