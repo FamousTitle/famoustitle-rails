@@ -48,6 +48,14 @@ module FamoustitleRails
           "include ActiveStorage::SetCurrent\n\n"
         end
       end
+
+      def hide_graphql_schema
+        file = Dir["#{Rails.root}/app/graphql/*_schema.rb"].first
+
+        inject_into_file file, after: '< GraphQL::Schema' do
+          "\n  disable_schema_introspection_entry_point unless Rails.env.development?\n  disable_type_introspection_entry_point unless Rails.env.development?\n\n"
+        end
+      end
   
       def copy_starting_point_routes
         template "config/routes.rb", "config/routes.rb", force: true
