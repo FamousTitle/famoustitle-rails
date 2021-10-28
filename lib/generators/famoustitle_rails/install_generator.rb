@@ -8,7 +8,7 @@ module FamoustitleRails
       end
 
       def add_gems
-        gem 'goldiloader', '~> 4.1.0'
+        gem 'goldiloader', '~> 4.1.2'
         gem 'graphql', '~> 1.12.12'
         gem 'rack-cors', '~> 1.1.1'
         gem 'lockbox', '~> 0.6.5'
