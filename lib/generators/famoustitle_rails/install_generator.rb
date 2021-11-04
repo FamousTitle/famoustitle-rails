@@ -70,6 +70,10 @@ module FamoustitleRails
           "\n  port: <%= ENV.fetch(\"RAILS_API_DB_PORT\") { \"db-mysql\" } %>"
         end
       end
+
+      def create_db_rake_file
+        template "lib/tasks/db.rake", "lib/tasks/db.rake"
+      end 
   
       def get_migrations
         run "rails railties:install:migrations"
