@@ -38,7 +38,7 @@ module FamoustitleRails
   
       def setup_graphql
         run "rails generate graphql:install"
-        gsub_file 'Gemfile', "gem 'graphiql-rails', group: :development", ''
+        #gsub_file 'Gemfile', "gem 'graphiql-rails', group: :development", ''
   
         file = 'app/controllers/graphql_controller.rb'
         gsub_file file, "# protect_from_forgery with: :null_session", 'protect_from_forgery with: :null_session'
