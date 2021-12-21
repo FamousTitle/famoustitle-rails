@@ -26,19 +26,19 @@ module FamoustitleRails
         end
       end
   
+      def setup_devise
+        template "models/user.rb", "models/user.rb"
+      end
+
       def install_gems
         Bundler.with_original_env do
           run "bundle install"
         end
       end
   
-      def setup_devise
-        template "models/user.rb", "models/user.rb"
-      end
-  
       def setup_graphql
         run "rails generate graphql:install"
-        gsub_file 'Gemfile', "gem 'graphiql-rails', group: :development", ''
+        #gsub_file 'Gemfile', "gem 'graphiql-rails', group: :development", ''
   
         file = 'app/controllers/graphql_controller.rb'
         gsub_file file, "# protect_from_forgery with: :null_session", 'protect_from_forgery with: :null_session'
@@ -74,6 +74,12 @@ module FamoustitleRails
       def create_db_rake_file
         template "lib/tasks/db.rake", "lib/tasks/db.rake"
       end 
+
+      def install_gems_again
+        Bundler.with_original_env do
+          run "bundle install"
+        end
+      end
   
       def get_migrations
         run "rails railties:install:migrations"
