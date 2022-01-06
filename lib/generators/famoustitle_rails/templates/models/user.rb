@@ -8,7 +8,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :jwt_authenticatable, jwt_revocation_strategy: self
 
-  blind_index :email, expression: ->(v) { v.downcase }
-  encrypts :email
+  validates :email, uniqueness: true
+  encrypts :email, deterministic: true, downcase: true
 
 end

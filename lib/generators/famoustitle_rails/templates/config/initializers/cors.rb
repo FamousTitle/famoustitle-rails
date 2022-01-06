@@ -1,8 +1,6 @@
-host = ENV.fetch("RAILS_API_HOST") { "localhost" }
-
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://#{host}:3000"
+    origins *ENV.fetch('CORS_ORIGINS').split(" ").map(&:strip)
     
     resource '*',
       headers: :any,

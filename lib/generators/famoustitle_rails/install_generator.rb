@@ -9,11 +9,9 @@ module FamoustitleRails
 
       def add_gems
         gem 'goldiloader', '~> 4.1.2'
-        gem 'graphql', '~> 1.12.12'
+        gem 'graphql', '~> 1.12.23'
         gem 'rack-cors', '~> 1.1.1'
-        gem 'lockbox', '~> 0.6.5'
-        gem 'blind_index', '~> 2.2.0'
-        gem 'fameauth', git: 'https://github.com/vleango/fameauth.git', tag: "1.2.0"
+        gem 'fameauth', git: 'https://github.com/vleango/fameauth.git', tag: "1.3.0"
       end
   
       def create_cors_config_file
@@ -27,7 +25,7 @@ module FamoustitleRails
       end
   
       def setup_devise
-        template "models/user.rb", "models/user.rb"
+        template "models/user.rb", "app/models/user.rb"
       end
 
       def install_gems
@@ -61,14 +59,8 @@ module FamoustitleRails
         template "config/routes.rb", "config/routes.rb", force: true
       end
   
-      def setup_database
-        file = 'config/database.yml'
-        gsub_file file, "password:", 'password: rails'
-        gsub_file file, "host: localhost", 'host: <%= ENV.fetch("RAILS_API_HOST") { "db-mysql" } %>'
-  
-        inject_into_file file, after: 'host: <%= ENV.fetch("RAILS_API_HOST") { "db-mysql" } %>' do
-          "\n  port: <%= ENV.fetch(\"RAILS_API_DB_PORT\") { \"db-mysql\" } %>"
-        end
+      def copy_database
+        copy_file "config/database.yml", "config/database.yml", force: true
       end
 
       def create_db_rake_file
