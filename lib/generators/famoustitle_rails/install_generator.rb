@@ -25,7 +25,7 @@ module FamoustitleRails
       end
   
       def setup_devise
-        template "models/user.rb", "app/models/user.rb"
+        template "app/models/user.rb", "app/models/user.rb"
       end
 
       def install_gems
@@ -53,6 +53,16 @@ module FamoustitleRails
         inject_into_file file, after: '< GraphQL::Schema' do
           "\n  disable_schema_introspection_entry_point unless Rails.env.development?\n  disable_type_introspection_entry_point unless Rails.env.development?\n"
         end
+      end
+
+      def add_example_graphql_endpoint
+        file = 'app/graphql/types/query_type.rb'
+        inject_into_file file, after: '# TODO: remove me' do
+          "\n    field :users, [Models::UserType], null: false\n\n    def users(**params)\n      User.all\n    end\n"
+        end
+
+        template "app/graphql/user_type.rb", "app/graphql/types/models/user_type.rb"
+
       end
   
       def copy_starting_point_routes
