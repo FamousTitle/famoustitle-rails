@@ -8,8 +8,7 @@ Gem::Specification.new do |spec|
   spec.license     = "MIT"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/vleango/famoustitle_rails"
-  #spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
+  spec.metadata["source_code_uri"] = "https://github.com/FamousTitle/famoustitle_rails"
 
   spec.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
 end
