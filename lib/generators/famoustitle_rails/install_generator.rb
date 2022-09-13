@@ -61,7 +61,12 @@ module FamoustitleRails
 
       def create_db_rake_file
         template "lib/tasks/db.rake", "lib/tasks/db.rake"
-      end 
+      end
+
+      def add_server_binding
+        file = 'Procfile.dev'
+        gsub_file file, "web: bin/rails server -p 3000", 'web: bin/rails server -p 3000 -b 0.0.0.0'
+      end
 
       def install_gems_again
         Bundler.with_original_env do
