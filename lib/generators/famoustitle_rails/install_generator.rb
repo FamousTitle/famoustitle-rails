@@ -63,6 +63,12 @@ module FamoustitleRails
         template "lib/tasks/db.rake", "lib/tasks/db.rake"
       end
 
+      # rails 7+ install foreman with sudo
+      def add_sudo_to_foreman
+        file = 'bin/dev'
+        gsub_file file, "gem install foreman", 'sudo gem install foreman'
+      end
+
       def add_server_binding
         file = 'Procfile.dev'
         gsub_file file, "web: bin/rails server -p 3000", 'web: bin/rails server -p 3000 -b 0.0.0.0'
