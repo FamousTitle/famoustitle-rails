@@ -71,7 +71,7 @@ module FamoustitleRails
 
       def add_server_binding
         file = 'Procfile.dev'
-        gsub_file file, "web: bin/rails server -p 3000", 'web: bin/rails server -p 3000 -b 0.0.0.0'
+        gsub_file file, "rails server", 'rails server -b 0.0.0.0'
       end
 
       def install_gems_again
