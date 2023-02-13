@@ -11,7 +11,7 @@ module FamoustitleRails
         gem 'goldiloader', '~> 4.2.0'
         gem 'graphql', '~> 2.0.14'
         gem 'rack-cors', '~> 1.1.1'
-        gem 'fameauth', git: 'https://github.com/FamousTitle/fameauth.git', tag: "1.5.0"
+        gem 'fameauth', git: 'https://github.com/FamousTitle/fameauth.git', tag: "1.5.1"
       end
   
       def create_cors_config_file
