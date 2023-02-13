@@ -11,7 +11,7 @@ module FamoustitleRails
         gem 'goldiloader', '~> 4.2.0'
         gem 'graphql', '~> 2.0.14'
         gem 'rack-cors', '~> 1.1.1'
-        gem 'fameauth', git: 'https://github.com/FamousTitle/fameauth.git', tag: "1.4.0"
+        gem 'fameauth', git: 'https://github.com/FamousTitle/fameauth.git', tag: "1.5.0"
       end
   
       def create_cors_config_file
@@ -32,14 +32,59 @@ module FamoustitleRails
   
       def setup_graphql
         run "rails generate graphql:install"
-        #gsub_file 'Gemfile', "gem 'graphiql-rails', group: :development", ''
   
         file = 'app/controllers/graphql_controller.rb'
         gsub_file file, "# protect_from_forgery with: :null_session", 'protect_from_forgery with: :null_session'
         gsub_file file, "# current_user: current_user,", 'current_user: current_user,'
         
         inject_into_file file, before: "def execute" do
-          "include ActiveStorage::SetCurrent\n\n"
+          <<-HEREDOC
+          include ActiveStorage::SetCurrent
+
+          HEREDOC
+        end
+      end
+
+      def add_graphql_mutations
+        file = 'app/graphql/types/mutation_type.rb'
+        inject_into_file file, after: "MutationType < Types::BaseObject" do
+          <<-HEREDOC
+
+            field :user_reset_password, String, null: false do
+              argument :password_reset_token, String, required: true
+              argument :password, String, required: true
+              argument :password_confirmation, String, required: true
+            end
+        
+            def user_reset_password(password_reset_token:, password:, password_confirmation:)
+              User.reset_password_by_token(
+                reset_password_token: reset_password_token,
+                password: password,
+                password_confirmation: password_confirmation
+              )
+              "ok"
+            end
+
+          HEREDOC
+        end
+      end
+
+      def add_graphql_queries
+        file = 'app/graphql/types/query_type.rb'
+        inject_into_file file, after: "include GraphQL::Types::Relay::HasNodesField" do
+          <<-HEREDOC
+
+              field :password_reset_token, String, null: false do
+                argument :email, String, required: true
+              end
+          
+              def password_reset_token(email:)
+                user = User.find_by(email: email)
+                user.send_password_reset_email if user.present?
+                "ok"
+              end
+
+          HEREDOC
         end
       end
 
@@ -47,7 +92,12 @@ module FamoustitleRails
         file = Dir["#{Rails.root}/app/graphql/*_schema.rb"].first
 
         inject_into_file file, after: '< GraphQL::Schema' do
-          "\n  disable_schema_introspection_entry_point unless Rails.env.development?\n  disable_type_introspection_entry_point unless Rails.env.development?\n"
+          <<-HEREDOC
+          
+          disable_schema_introspection_entry_point unless Rails.env.development?
+          disable_type_introspection_entry_point unless Rails.env.development?
+
+          HEREDOC
         end
       end
   
