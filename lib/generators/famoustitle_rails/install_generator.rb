@@ -11,13 +11,24 @@ module FamoustitleRails
         gem 'goldiloader', '~> 4.2.0'
         gem 'graphql', '~> 2.0.14'
         gem 'rack-cors', '~> 1.1.1'
-        gem 'fameauth', git: 'https://github.com/FamousTitle/fameauth.git', tag: "1.5.1"
+        gem 'devise-jwt', '~> 0.10.0'
+        gem 'sendgrid-ruby', '~> 6.6.2'
       end
-  
-      def create_cors_config_file
-        template "config/initializers/cors.rb", "config/initializers/cors.rb"
+
+      def copy_files
+        Dir[
+          "app/controllers/*", 
+          "app/graphql/*", 
+          "app/models/*",
+          "config/*",
+          "config/db/migrate/*",
+          "config/initializers/*",
+          "lib/tasks/*"
+        ].each do |file|
+          template(file, file, force: true) if File.exists?(file)
+        end
       end
-  
+
       def update_application_for_dns_fix
         application(nil, env: "development") do
           "Rails.application.config.hosts = nil"
@@ -49,7 +60,16 @@ include ActiveStorage::SetCurrent
         file = 'app/graphql/types/mutation_type.rb'
         inject_into_file file, after: "MutationType < Types::BaseObject" do
           <<-HEREDOC
-    
+    field :send_password_reset_token, String, null: false do
+      argument :email, String, required: true
+    end
+
+    def send_password_reset_token(email:)
+      user = User.find_by(email: email)
+      user.send_password_reset_email if user.present?
+      "ok"
+    end
+
     field :user_reset_password, String, null: false do
       argument :password_reset_token, String, required: true
       argument :password, String, required: true
@@ -69,25 +89,6 @@ include ActiveStorage::SetCurrent
         end
       end
 
-      def add_graphql_queries
-        file = 'app/graphql/types/query_type.rb'
-        inject_into_file file, after: "# They will be entry points for queries on your schema." do
-          <<-HEREDOC
-    
-    field :password_reset_token, String, null: false do
-      argument :email, String, required: true
-    end
-
-    def password_reset_token(email:)
-      user = User.find_by(email: email)
-      user.send_password_reset_email if user.present?
-      "ok"
-    end
-
-          HEREDOC
-        end
-      end
-
       def hide_graphql_schema
         file = Dir["#{Rails.root}/app/graphql/*_schema.rb"].first
 
@@ -98,18 +99,6 @@ include ActiveStorage::SetCurrent
   disable_type_introspection_entry_point unless Rails.env.development?
           HEREDOC
         end
-      end
-  
-      def copy_starting_point_routes
-        template "config/routes.rb", "config/routes.rb", force: true
-      end
-  
-      def copy_database
-        copy_file "config/database.yml", "config/database.yml", force: true
-      end
-
-      def create_db_rake_file
-        template "lib/tasks/db.rake", "lib/tasks/db.rake"
       end
 
       # rails 7+ install foreman with sudo
