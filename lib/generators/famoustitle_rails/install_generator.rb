@@ -14,21 +14,7 @@ module FamoustitleRails
         gem 'devise-jwt', '~> 0.10.0'
         gem 'sendgrid-ruby', '~> 6.6.2'
       end
-
-      def copy_files
-        Dir[
-          "app/controllers/*", 
-          "app/graphql/*", 
-          "app/models/*",
-          "config/*",
-          "config/db/migrate/*",
-          "config/initializers/*",
-          "lib/tasks/*"
-        ].each do |file|
-          template(file, file, force: true) if File.exists?(file)
-        end
-      end
-
+  
       def update_application_for_dns_fix
         application(nil, env: "development") do
           "Rails.application.config.hosts = nil"
@@ -40,7 +26,54 @@ module FamoustitleRails
           run "bundle install"
         end
       end
-  
+
+      # rails 7+ install foreman with sudo
+      def add_sudo_to_foreman
+        file = 'bin/dev'
+        gsub_file file, "gem install foreman", 'sudo gem install foreman'
+      end
+
+      def add_server_binding
+        file = 'Procfile.dev'
+        gsub_file file, "rails server", 'rails server -b 0.0.0.0'
+      end
+
+      def setup_devise
+        run "rails generate devise:install"
+        run "rails generate devise User"
+        run "rails g model allowlisted_jwt user:references jti:string:uniq aud:string exp:datetime"
+
+        file = 'config/initializers/devise.rb'
+        inject_into_file file, after: '# config.sign_in_after_change_password = true' do
+          <<-HEREDOC
+
+        
+  # ==> JWT
+  config.jwt do |jwt|
+    jwt.secret = ENV['DEVISE_SECRET_KEY']
+    jwt.dispatch_requests = [
+        ['POST', %r{^/users/sign_in$}], # adding authorization bearer to sign_in header response
+        ['POST', %r{^/users$}]          # adding authorization bearer to registration header response
+    ]
+
+    jwt.revocation_requests = [
+        ['DELETE', %r{^/users/sign_out$}]
+    ]
+
+    jwt.request_formats = { user: [:json] }
+
+    jwt.expiration_time = 1.week.to_i
+  end
+          HEREDOC
+        end
+      end
+
+      def add_validation_to_allowlisted_jwts
+        file = Dir["#{Rails.root}/db/migrate/*_create_allowlisted_jwts.rb"].first
+        gsub_file file, "t.string :jti", "t.string :jti, null: false"
+        gsub_file file, "t.datetime :exp", "t.datetime :exp, null: false"
+      end
+
       def setup_graphql
         run "rails generate graphql:install"
   
@@ -56,10 +89,16 @@ include ActiveStorage::SetCurrent
         end
       end
 
+      def graphql_install_cleanup
+        gsub_file 'Gemfile', /gem "graphiql-rails".*/, ""
+        template "config/routes.rb", "config/routes.rb", force: true
+      end
+
       def add_graphql_mutations
         file = 'app/graphql/types/mutation_type.rb'
         inject_into_file file, after: "MutationType < Types::BaseObject" do
           <<-HEREDOC
+
     field :send_password_reset_token, String, null: false do
       argument :email, String, required: true
     end
@@ -71,12 +110,12 @@ include ActiveStorage::SetCurrent
     end
 
     field :user_reset_password, String, null: false do
-      argument :password_reset_token, String, required: true
+      argument :reset_password_token, String, required: true
       argument :password, String, required: true
       argument :password_confirmation, String, required: true
     end
 
-    def user_reset_password(password_reset_token:, password:, password_confirmation:)
+    def user_reset_password(reset_password_token:, password:, password_confirmation:)
       User.reset_password_by_token(
         reset_password_token: reset_password_token,
         password: password,
@@ -101,15 +140,13 @@ include ActiveStorage::SetCurrent
         end
       end
 
-      # rails 7+ install foreman with sudo
-      def add_sudo_to_foreman
-        file = 'bin/dev'
-        gsub_file file, "gem install foreman", 'sudo gem install foreman'
-      end
-
-      def add_server_binding
-        file = 'Procfile.dev'
-        gsub_file file, "rails server", 'rails server -b 0.0.0.0'
+      def copy_files
+        template "app/controllers/registrations_controller.rb", "app/controllers/registrations_controller.rb"
+        template "app/controllers/sessions_controller.rb", "app/controllers/sessions_controller.rb"
+        template "app/models/user.rb", "app/models/user.rb", force: true
+        template "config/initializers/cors.rb", "config/initializers/cors.rb"
+        copy_file "config/database.yml", "config/database.yml", force: true
+        template "lib/tasks/db.rake", "lib/tasks/db.rake"
       end
 
       def install_gems_again
