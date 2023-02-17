@@ -116,14 +116,13 @@ include ActiveStorage::SetCurrent
     end
 
     def user_reset_password(reset_password_token:, password:, password_confirmation:)
-      User.reset_password_by_token(
+      user = User.reset_password_by_token(
         reset_password_token: reset_password_token,
         password: password,
         password_confirmation: password_confirmation
       )
-      "ok"
+      user.persisted? ? "ok" : "error"
     end
-
           HEREDOC
         end
       end
