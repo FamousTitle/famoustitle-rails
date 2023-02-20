@@ -72,7 +72,7 @@ HEREDOC
         
   # ==> JWT
   config.jwt do |jwt|
-    jwt.secret = ENV['DEVISE_SECRET_KEY']
+    jwt.secret = ENV.fetch('DEVISE_SECRET_KEY')
     jwt.dispatch_requests = [
         ['POST', %r{^/users/sign_in$}], # adding authorization bearer to sign_in header response
         ['POST', %r{^/users$}]          # adding authorization bearer to registration header response

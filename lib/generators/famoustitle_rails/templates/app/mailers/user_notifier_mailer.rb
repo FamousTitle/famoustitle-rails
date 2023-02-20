@@ -1,5 +1,5 @@
 class UserNotifierMailer < ApplicationMailer
-  default :from => ENV['MAIL_FROM_EMAIL']
+  default :from => ENV.fetch('MAIL_FROM_EMAIL')
 
   def send_password_reset_email(user, reset_url)
     @user = user
