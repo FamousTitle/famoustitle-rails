@@ -38,6 +38,28 @@ module FamoustitleRails
         gsub_file file, "rails server", 'rails server -b 0.0.0.0'
       end
 
+      def add_mailer_smtp_settings
+        file = 'config/environment.rb'
+        inject_into_file file, after: 'Rails.application.initialize!' do
+<<-HEREDOC
+
+
+ActionMailer::Base.smtp_settings = {
+  :user_name => 'apikey', # This is the string literal 'apikey', NOT the ID of your API key
+  :password => ENV.fetch('SENDGRID_API_KEY'), # This is the secret sendgrid API key which was issued during API key creation
+  :address => 'smtp.sendgrid.net',
+  :port => 587,
+  :authentication => :plain,
+  :enable_starttls_auto => true
+}
+HEREDOC
+        end
+      end
+
+      def generate_mailer_files
+        run "rails generate mailer UserNotifierMailer"
+      end
+
       def setup_devise
         run "rails generate devise:install"
         run "rails generate devise User"
@@ -140,12 +162,16 @@ include ActiveStorage::SetCurrent
       end
 
       def copy_files
-        template "app/controllers/registrations_controller.rb", "app/controllers/registrations_controller.rb"
-        template "app/controllers/sessions_controller.rb", "app/controllers/sessions_controller.rb"
-        template "app/models/user.rb", "app/models/user.rb", force: true
-        template "config/initializers/cors.rb", "config/initializers/cors.rb"
+        copy_file "app/controllers/registrations_controller.rb", "app/controllers/registrations_controller.rb"
+        copy_file "app/controllers/sessions_controller.rb", "app/controllers/sessions_controller.rb"
+        copy_file "app/models/user.rb", "app/models/user.rb", force: true
+        copy_file "config/initializers/cors.rb", "config/initializers/cors.rb"
         copy_file "config/database.yml", "config/database.yml", force: true
-        template "lib/tasks/db.rake", "lib/tasks/db.rake"
+        copy_file "lib/tasks/db.rake", "lib/tasks/db.rake"
+        copy_file "app/mailers/user_notifier_mailer.rb", "app/mailers/user_notifier_mailer.rb", force: true
+        copy_file "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
+          "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
+          force: true 
       end
 
       def install_gems_again
