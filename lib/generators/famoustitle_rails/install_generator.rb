@@ -13,6 +13,11 @@ module FamoustitleRails
         gem 'rack-cors', '~> 1.1.1'
         gem 'devise-jwt', '~> 0.10.0'
         gem 'sendgrid-ruby', '~> 6.6.2'
+        gem_group :test do
+          gem 'rspec-rails', '~> 6.0.1'
+          gem 'factory_bot_rails', '~> 6.2.0'
+          gem 'faker', '~> 3.1.1'
+        end
       end
   
       def update_application_for_dns_fix
@@ -60,6 +65,20 @@ HEREDOC
         run "rails generate mailer UserNotifierMailer"
       end
 
+      def setup_rspec
+        run "rails generate rspec:install"
+
+        file = 'spec/rails_helper.rb'
+        inject_into_file file, after: '# Add additional requires below this line. Rails is not loaded until this point!' do
+<<-HEREDOC
+
+require 'factory_bot_rails'
+require 'support/factory_bot'
+require 'faker'
+HEREDOC
+        end
+      end
+
       def setup_devise
         run "rails generate devise:install"
         run "rails generate devise User"
@@ -67,7 +86,7 @@ HEREDOC
 
         file = 'config/initializers/devise.rb'
         inject_into_file file, after: '# config.sign_in_after_change_password = true' do
-          <<-HEREDOC
+<<-HEREDOC
 
         
   # ==> JWT
@@ -86,7 +105,7 @@ HEREDOC
 
     jwt.expiration_time = 1.week.to_i
   end
-          HEREDOC
+HEREDOC
         end
       end
 
@@ -104,10 +123,10 @@ HEREDOC
         gsub_file file, "# current_user: current_user,", 'current_user: current_user,'
         
         inject_into_file file, before: "def execute" do
-          <<-HEREDOC
+<<-HEREDOC
 include ActiveStorage::SetCurrent
 
-          HEREDOC
+HEREDOC
         end
       end
 
@@ -119,7 +138,7 @@ include ActiveStorage::SetCurrent
       def add_graphql_mutations
         file = 'app/graphql/types/mutation_type.rb'
         inject_into_file file, after: "MutationType < Types::BaseObject" do
-          <<-HEREDOC
+<<-HEREDOC
 
     field :send_password_reset_token, String, null: false do
       argument :email, String, required: true
@@ -145,14 +164,14 @@ include ActiveStorage::SetCurrent
       )
       user.persisted? ? "ok" : "error"
     end
-          HEREDOC
+HEREDOC
         end
       end
 
       def add_graphql_queries
         file = 'app/graphql/types/query_type.rb'
         inject_into_file file, after: "# They will be entry points for queries on your schema." do
-          <<-HEREDOC
+<<-HEREDOC
 
     field :current_user, Models::UserType
 
@@ -160,7 +179,7 @@ include ActiveStorage::SetCurrent
       return nil if context[:current_user].blank?
       context[:current_user]
     end
-          HEREDOC
+HEREDOC
         end
       end
 
@@ -168,11 +187,11 @@ include ActiveStorage::SetCurrent
         file = Dir["#{Rails.root}/app/graphql/*_schema.rb"].first
 
         inject_into_file file, after: '< GraphQL::Schema' do
-          <<-HEREDOC
+<<-HEREDOC
           
   disable_schema_introspection_entry_point unless Rails.env.development?
   disable_type_introspection_entry_point unless Rails.env.development?
-          HEREDOC
+HEREDOC
         end
       end
 
@@ -188,6 +207,10 @@ include ActiveStorage::SetCurrent
         copy_file "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
           "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
           force: true 
+        copy_file "spec/factories/user.rb", "spec/factories/user.rb"
+        copy_file "spec/requests/registrations_spec.rb", "spec/requests/registrations_spec.rb"
+        copy_file "spec/requests/sessions_spec.rb", "spec/requests/sessions_spec.rb"
+        copy_file "spec/support/factory_bot.rb", "spec/support/factory_bot.rb"
       end
 
       def install_gems_again
