@@ -149,6 +149,21 @@ include ActiveStorage::SetCurrent
         end
       end
 
+      def add_graphql_queries
+        file = 'app/graphql/types/query_type.rb'
+        inject_into_file file, after: "# They will be entry points for queries on your schema." do
+          <<-HEREDOC
+
+    field :current_user, Models::UserType
+
+    def current_user
+      return nil if context[:current_user].blank?
+      context[:current_user]
+    end
+          HEREDOC
+        end
+      end
+
       def hide_graphql_schema
         file = Dir["#{Rails.root}/app/graphql/*_schema.rb"].first
 
@@ -164,6 +179,7 @@ include ActiveStorage::SetCurrent
       def copy_files
         copy_file "app/controllers/registrations_controller.rb", "app/controllers/registrations_controller.rb"
         copy_file "app/controllers/sessions_controller.rb", "app/controllers/sessions_controller.rb"
+        copy_file "app/graphql/types/models/user_type.rb", "app/graphql/types/models/user_type.rb"
         copy_file "app/models/user.rb", "app/models/user.rb", force: true
         copy_file "config/initializers/cors.rb", "config/initializers/cors.rb"
         copy_file "config/database.yml", "config/database.yml", force: true
