@@ -84,6 +84,11 @@ HEREDOC
         run "rails generate devise User"
         run "rails g model allowlisted_jwt user:references jti:string:uniq aud:string exp:datetime"
 
+
+        # always set env for testing to test
+        rails_helper = 'spec/rails_helper.rb'
+        gsub_file rails_helper, "ENV['RAILS_ENV'] ||= 'test'", "ENV['RAILS_ENV'] = 'test'"
+
         file = 'config/initializers/devise.rb'
         inject_into_file file, after: '# config.sign_in_after_change_password = true' do
 <<-HEREDOC
@@ -208,6 +213,9 @@ HEREDOC
           "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
           force: true 
         copy_file "spec/factories/user.rb", "spec/factories/user.rb"
+        copy_file "spec/models/user_spec.rb", "spec/models/user_spec.rb"
+        copy_file "spec/requests/graphql_mutations_spec.rb", "spec/requests/graphql_mutations_spec.rb"
+        copy_file "spec/requests/graphql_queries_spec.rb", "spec/requests/graphql_queries_spec.rb"
         copy_file "spec/requests/registrations_spec.rb", "spec/requests/registrations_spec.rb"
         copy_file "spec/requests/sessions_spec.rb", "spec/requests/sessions_spec.rb"
         copy_file "spec/support/factory_bot.rb", "spec/support/factory_bot.rb"
