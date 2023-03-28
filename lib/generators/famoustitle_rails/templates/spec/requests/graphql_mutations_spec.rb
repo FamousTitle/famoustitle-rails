@@ -8,7 +8,9 @@ describe 'GraphqlMutations', type: :request do
         {
           query: <<-HEREDOC
             mutation {
-              sendPasswordResetToken(email: "some@email.com")
+              sendPasswordResetToken(input: { email: "some@email.com" }) {
+                success
+              }
             }
           HEREDOC
         }
@@ -26,10 +28,10 @@ describe 'GraphqlMutations', type: :request do
             
         end
 
-        it 'responds with ok' do
+        it 'responds with success' do
           post '/graphql', params: params
         json_body = JSON.parse(response.body)
-        expect(json_body.dig('data', 'sendPasswordResetToken')).to eq('ok')
+        expect(json_body.dig('data', 'sendPasswordResetToken', 'success')).to eq(true)
         end
       end
 
@@ -46,11 +48,11 @@ describe 'GraphqlMutations', type: :request do
           post '/graphql', params: params
         end
 
-        it 'responds with ok' do
+        it 'responds with success' do
           allow(UserNotifierMailer).to receive(:send_password_reset_email).and_return(double(deliver: true))
           post '/graphql', params: params
           json_body = JSON.parse(response.body)
-          expect(json_body.dig('data', 'sendPasswordResetToken')).to eq('ok')
+          expect(json_body.dig('data', 'sendPasswordResetToken', 'success')).to eq(true)
         end
       end
 
@@ -61,30 +63,41 @@ describe 'GraphqlMutations', type: :request do
         {
           query: <<-HEREDOC
             mutation {
-              userResetPassword(
+              userResetPassword(input: {
                 resetPasswordToken: "1", 
                 password: "2", 
                 passwordConfirmation: "3"
-              )
+              }) {
+                success
+                errors
+                user {
+                  id
+                }
+              }
             }
           HEREDOC
         }
       }
 
       it 'calls User.reset_password_by_token' do
-        expect(User).to receive(:reset_password_by_token).and_return(double(persisted?: true))
+        expect(User).to receive(:reset_password_by_token).and_return(double(id: 1, persisted?: true))
         post '/graphql', params: params
       end
 
       context 'user is found' do
+        let!(:user) { FactoryBot.create(:user) }
+
         before do
-          allow(User).to receive(:reset_password_by_token).and_return(FactoryBot.create(:user))
+          allow(User).to receive(:reset_password_by_token).and_return(user)
         end
 
         it 'responds with ok' do
           post '/graphql', params: params
           json_body = JSON.parse(response.body)
-          expect(json_body.dig('data', 'userResetPassword')).to eq('ok')
+          results = json_body.dig("data", "userResetPassword")
+          expect(results['success']).to eq(true)
+          expect(results['errors']).to eq([])
+          expect(results.dig('user', 'id')).to eq(user.id.to_s)
         end
       end
 
@@ -96,7 +109,10 @@ describe 'GraphqlMutations', type: :request do
         it 'responds with error' do
           post '/graphql', params: params
           json_body = JSON.parse(response.body)
-          expect(json_body.dig('data', 'userResetPassword')).to eq('error')
+          results = json_body.dig("data", "userResetPassword")
+          expect(results['success']).to eq(false)
+          expect(results['errors']).to eq(['error'])
+          expect(results.dig('user', 'id')).to eq(nil)
         end
       end
     end
