@@ -5,6 +5,8 @@ Rails.application.routes.draw do
       sessions: 'sessions',
       registrations: 'registrations'
   }
+
+  resources :uploads, only: [:index, :create, :destroy]
   
   post "/graphql", to: "graphql#execute"
 end

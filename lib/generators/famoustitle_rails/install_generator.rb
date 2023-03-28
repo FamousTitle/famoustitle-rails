@@ -13,10 +13,15 @@ module FamoustitleRails
         gem 'rack-cors', '~> 1.1.1'
         gem 'devise-jwt', '~> 0.10.0'
         gem 'sendgrid-ruby', '~> 6.6.2'
+        gem 'image_processing', '~> 1.2'
+        gem 'ruby-vips', '~> 2.1.4'
         gem_group :test do
           gem 'rspec-rails', '~> 6.0.1'
           gem 'factory_bot_rails', '~> 6.2.0'
           gem 'faker', '~> 3.1.1'
+        end
+        gem_group :production do
+          gem "aws-sdk-s3", require: false
         end
       end
   
@@ -126,13 +131,19 @@ HEREDOC
         file = 'app/controllers/graphql_controller.rb'
         gsub_file file, "# protect_from_forgery with: :null_session", 'protect_from_forgery with: :null_session'
         gsub_file file, "# current_user: current_user,", 'current_user: current_user,'
-        
-        inject_into_file file, before: "def execute" do
-<<-HEREDOC
-include ActiveStorage::SetCurrent
+      end
 
+      def setup_active_storage
+        file = 'app/controllers/application_controller.rb'
+        inject_into_file file, before: "end" do
+<<-HEREDOC
+  include ActiveStorage::SetCurrent
+  
 HEREDOC
         end
+
+        production_file = 'config/environments/production.rb'
+        gsub_file production_file, "config.active_storage.service = :local", "config.active_storage.service = :amazon"
       end
 
       def graphql_install_cleanup
@@ -203,15 +214,17 @@ HEREDOC
       def copy_files
         copy_file "app/controllers/registrations_controller.rb", "app/controllers/registrations_controller.rb"
         copy_file "app/controllers/sessions_controller.rb", "app/controllers/sessions_controller.rb"
+        copy_file "app/controllers/uploads_controller.rb", "app/controllers/uploads_controller.rb"
         copy_file "app/graphql/types/models/user_type.rb", "app/graphql/types/models/user_type.rb"
         copy_file "app/models/user.rb", "app/models/user.rb", force: true
-        copy_file "config/initializers/cors.rb", "config/initializers/cors.rb"
-        copy_file "config/database.yml", "config/database.yml", force: true
-        copy_file "lib/tasks/db.rake", "lib/tasks/db.rake"
         copy_file "app/mailers/user_notifier_mailer.rb", "app/mailers/user_notifier_mailer.rb", force: true
         copy_file "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
           "app/views/user_notifier_mailer/send_password_reset_email.html.erb", 
           force: true 
+        copy_file "config/initializers/cors.rb", "config/initializers/cors.rb"
+        copy_file "config/database.yml", "config/database.yml", force: true
+        copy_file "config/storage.yml", "config/storage.yml", force: true
+        copy_file "lib/tasks/db.rake", "lib/tasks/db.rake"
         copy_file "spec/factories/user.rb", "spec/factories/user.rb"
         copy_file "spec/models/user_spec.rb", "spec/models/user_spec.rb"
         copy_file "spec/requests/graphql_mutations_spec.rb", "spec/requests/graphql_mutations_spec.rb"
