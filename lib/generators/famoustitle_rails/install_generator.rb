@@ -53,7 +53,6 @@ module FamoustitleRails
         inject_into_file file, after: 'Rails.application.initialize!' do
 <<-HEREDOC
 
-
 ActionMailer::Base.smtp_settings = {
   :user_name => 'apikey', # This is the string literal 'apikey', NOT the ID of your API key
   :password => ENV.fetch('SENDGRID_API_KEY'), # This is the secret sendgrid API key which was issued during API key creation
@@ -76,7 +75,6 @@ HEREDOC
         file = 'spec/rails_helper.rb'
         inject_into_file file, after: '# Add additional requires below this line. Rails is not loaded until this point!' do
 <<-HEREDOC
-
 require 'factory_bot_rails'
 require 'support/factory_bot'
 require 'faker'
