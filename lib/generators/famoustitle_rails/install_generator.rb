@@ -196,6 +196,7 @@ HEREDOC
         copy_file "config/initializers/cors.rb", "config/initializers/cors.rb"
         copy_file "config/database.yml", "config/database.yml", force: true
         copy_file "config/storage.yml", "config/storage.yml", force: true
+        copy_file "db/seeds.rb", "db/seeds.rb", force: true
         copy_file "lib/tasks/db.rake", "lib/tasks/db.rake"
         copy_file "spec/factories/user.rb", "spec/factories/user.rb"
         copy_file "spec/models/user_spec.rb", "spec/models/user_spec.rb"
