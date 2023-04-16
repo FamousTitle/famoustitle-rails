@@ -15,6 +15,10 @@ class User < ApplicationRecord
     attachable.variant :thumb, resize_to_limit: [150, 150]
   end
 
+  has_one_attached :avatar do |attachable|
+    attachable.variant :thumb, resize_to_limit: [150, 150]
+  end
+
   def send_password_reset_email
     reset_url = "#{ENV.fetch('CLIENT_URL')}/password_reset?token=#{generate_reset_token}"
     UserNotifierMailer.send_password_reset_email(self, reset_url).deliver
