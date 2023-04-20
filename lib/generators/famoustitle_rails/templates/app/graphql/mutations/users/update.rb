@@ -1,6 +1,9 @@
 module Mutations
   module Users
-    class Update < BaseMutation  
+    class Update < BaseMutation
+      argument :password, String, required: false
+      argument :password_confirmation, String, required: false
+      
       field :success, Boolean, null: false
       field :errors, [String], null: false
       field :user, Types::Models::UserType, null: true

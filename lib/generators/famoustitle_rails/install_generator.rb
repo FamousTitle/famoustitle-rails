@@ -134,14 +134,6 @@ HEREDOC
       end
 
       def setup_active_storage
-        file = 'app/controllers/application_controller.rb'
-        inject_into_file file, before: "end" do
-<<-HEREDOC
-  include ActiveStorage::SetCurrent
-  
-HEREDOC
-        end
-
         production_file = 'config/environments/production.rb'
         gsub_file production_file, "config.active_storage.service = :local", "config.active_storage.service = :amazon"
       end
@@ -179,6 +171,9 @@ HEREDOC
       end
 
       def copy_files
+        copy_file "app/controllers/application_controller.rb", "app/controllers/application_controller.rb", force: true
+        copy_file "app/controllers/authenticated_controller.rb", "app/controllers/authenticated_controller.rb"
+        copy_file "app/controllers/avatars_controller.rb", "app/controllers/avatars_controller.rb"
         copy_file "app/controllers/registrations_controller.rb", "app/controllers/registrations_controller.rb"
         copy_file "app/controllers/sessions_controller.rb", "app/controllers/sessions_controller.rb"
         copy_file "app/controllers/uploads_controller.rb", "app/controllers/uploads_controller.rb"

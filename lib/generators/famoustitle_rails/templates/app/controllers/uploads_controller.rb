@@ -1,6 +1,4 @@
-class UploadsController < ApplicationController
-  protect_from_forgery with: :null_session
-  before_action :authenticate_user!
+class UploadsController < AuthenticatedController
 
   def create
     current_user.files.attach(params[:files])
@@ -23,14 +21,6 @@ class UploadsController < ApplicationController
   def destroy
     file = current_user.files.find(params[:id])
     file.purge if file
-  end
-
-  private
-
-  # need to override devise's authenticate_user! 
-  # because we want :unauthorized instead of redirect
-  def authenticate_user!
-    return head :unauthorized if current_user.blank?
   end
 
 end
