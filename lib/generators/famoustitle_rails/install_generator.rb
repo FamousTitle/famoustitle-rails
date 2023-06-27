@@ -207,10 +207,6 @@ HEREDOC
           run "bundle install"
         end
       end
-  
-      def get_migrations
-        run "rails railties:install:migrations"
-      end
       
     end
   end
